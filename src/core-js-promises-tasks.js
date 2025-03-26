@@ -33,13 +33,13 @@ function getPromise(number) {
  * Promise.resolve('success') => promise that will be fulfilled with 'success' value
  * Promise.reject('fail')     => promise that will be fulfilled with 'fail' value
  */
-function getPromiseResult(source) {
-  return new Promise((resolve) => {
-    source.then(
-      () => resolve('success'),
-      () => resolve('fail')
-    );
-  });
+async function getPromiseResult(source) {
+  try {
+    await source;
+    return Promise.resolve('success');
+  } catch {
+    return Promise.resolve('fail');
+  }
 }
 
 /**
@@ -55,11 +55,11 @@ function getPromiseResult(source) {
  * [Promise.resolve(1), Promise.reject(2), Promise.resolve(3)]  => Promise fulfilled with 1
  * [Promise.reject(1), Promise.reject(2), Promise.reject(3)]    => Promise rejected
  */
-function getFirstResolvedPromiseResult(promises) {
-  return Promise.allSettled(promises).then((results) => {
-    const found = results.find(({ status }) => status === 'fulfilled');
-    return found?.value ?? Promise.reject();
-  });
+async function getFirstResolvedPromiseResult(promises) {
+  const results = await Promise.allSettled(promises);
+  const found = results.find(({ status }) => status === 'fulfilled');
+
+  return found?.value ?? Promise.reject();
 }
 
 /**
@@ -112,12 +112,12 @@ function getAllOrNothing(promises) {
  * [Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)] => Promise fulfilled with [1, 2, 3]
  * [Promise.resolve(1), Promise.reject(2), Promise.resolve(3)]  => Promise fulfilled with [1, null, 3]
  */
-function getAllResult(promises) {
-  return Promise.allSettled(promises).then((results) => {
-    return results.map((result) =>
-      result.status === 'fulfilled' ? result.value : null
-    );
-  });
+async function getAllResult(promises) {
+  const results = await Promise.allSettled(promises);
+
+  return results.map((result) =>
+    result.status === 'fulfilled' ? result.value : null
+  );
 }
 
 /**
